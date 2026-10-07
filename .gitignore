@@ -64,3 +64,4 @@ macos/Runner/GoogleService-Info.plist
 *service-account*.json
 *.fcm.key
 .env
+.vscode/launch.json
