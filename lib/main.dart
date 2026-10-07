@@ -11,6 +11,8 @@ import 'package:provider/provider.dart';
 
 import 'firebase_options.dart';
 
+import 'package:climapp_cc20262/src/widgets/network_wrapper.dart';
+
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -50,7 +52,9 @@ class MyApp extends StatelessWidget {
             Theme.of(context).textTheme,
           ),
         ),
-        home: const WelcomeScreen(),
+        home: const NetworkWrapper(
+          child: WelcomeScreen(),
+        ),
       ),
     );
   }

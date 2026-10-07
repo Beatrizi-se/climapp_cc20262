@@ -20,7 +20,7 @@ class CityTileWidget extends StatelessWidget {
     const EnviromentEnum envEnum = EnviromentEnum.constants;
     return Container(
       decoration: BoxDecoration(
-        color: Color(0xFF15FFFFFF),
+        color: Color(0xff15ffffff),
         borderRadius: BorderRadius.circular(15),
       ),
       margin: .symmetric(vertical: 10),

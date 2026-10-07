@@ -1,0 +1,62 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "inputs": [
+        {
+            "id": "hgBrasilApiKey",
+            "type": "promptString",
+            "description": "Chave da HG Brasil Weather API",
+            "password": true
+        }
+    ],
+    "configurations": [
+        {
+            "name": "climapp_cc20262",
+            "request": "launch",
+            "type": "dart",
+            "toolArgs": [
+                "--dart-define=API_KEY=${input:hgBrasilApiKey}"
+            ]
+        },
+        {
+            "name": "climapp_cc20262 (profile mode)",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile",
+            "toolArgs": [
+                "--dart-define=API_KEY=${input:hgBrasilApiKey}"
+            ]
+        },
+        {
+            "name": "climapp_cc20262 (release mode)",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release",
+            "toolArgs": [
+                "--dart-define=API_KEY=${input:hgBrasilApiKey}"
+            ]
+        },
+        {
+            "name": ".widget_preview",
+            "cwd": ".widget_preview",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": ".widget_preview (profile mode)",
+            "cwd": ".widget_preview",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile"
+        },
+        {
+            "name": ".widget_preview (release mode)",
+            "cwd": ".widget_preview",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release"
+        }
+    ]
+}

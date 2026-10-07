@@ -15,6 +15,9 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+
+        // CORREÇÃO AQUI: No Kotlin DSL é obrigatório o uso do "is"
+        isCoreLibraryDesugaringEnabled = true
     }
 
     defaultConfig {
@@ -49,4 +52,9 @@ kotlin {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // CORREÇÃO AQUI: Dependência adicionada corretamente para Kotlin DSL
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }

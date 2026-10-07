@@ -12,12 +12,18 @@ class WeatherService {
   ) async {
     final enumEnv = EnviromentEnum.constants;
     final List<WeatherForecastModel> listCity = [];
+    if (enumEnv.API_KEY.isEmpty) {
+      throw HttpException(
+        'API_KEY não configurada. Inicie o Climapp pelo VS Code e informe a chave da HG Brasil.',
+      );
+    }
 
     for (var city in listCitySearch) {
-      final uri =
-          '${enumEnv.API_BASE_URL}?key=${enumEnv.API_KEY}&city_name=$city';
+      final uri = Uri.parse(enumEnv.API_BASE_URL).replace(
+        queryParameters: {'key': enumEnv.API_KEY, 'city_name': city},
+      );
       final response = await http
-          .get(Uri.parse(uri))
+          .get(uri)
           .timeout(
             const Duration(seconds: 5),
             onTimeout: () {
@@ -26,9 +32,23 @@ class WeatherService {
               );
             },
           );
-      if (response.statusCode >= 200 || response.statusCode < 300) {
-        final jsonDecoded = jsonDecode(response.body)['results'];
-        final model = WeatherForecastModel.fromJson(jsonDecoded);
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is! Map<String, dynamic>) {
+          throw const FormatException('Resposta inválida da API HG Brasil.');
+        }
+
+        final results = decoded['results'];
+        if (results is! Map<String, dynamic>) {
+          final error = decoded['error'];
+          final description = error is Map ? error['description'] : null;
+          throw HttpException(
+            description?.toString() ??
+                'A API não retornou dados para $city. Verifique a chave e o nome da cidade.',
+          );
+        }
+
+        final model = WeatherForecastModel.fromJson(results);
         listCity.add(model);
       } else {
         throw HttpException(

@@ -1,6 +1,7 @@
 // lib/src/services/notification_service.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class NotificationService {
   // Instância singleton para acesso global
@@ -10,10 +11,38 @@ class NotificationService {
 
   final FirebaseMessaging _fcm = FirebaseMessaging.instance;
 
+  final FlutterLocalNotificationsPlugin _localNotifications =
+  FlutterLocalNotificationsPlugin();
+
+  static const AndroidNotificationChannel _channel =
+  AndroidNotificationChannel(
+    'climapp_notifications',
+    'Notificações do Climapp',
+    description: 'Notificações recebidas pelo Climapp.',
+    importance: Importance.high,
+  );
+
   // Chave global para permitir navegação sem BuildContext
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   Future<void> initialize() async {
+    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+
+    const initializationSettings = InitializationSettings(
+      android: androidSettings,
+    );
+
+    await _localNotifications.initialize(
+      settings: initializationSettings,
+    );
+
+    final androidPlugin = _localNotifications
+        .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+
+    await androidPlugin?.createNotificationChannel(_channel);
+    await androidPlugin?.requestNotificationsPermission();
+
     // 1. Solicitar permissões (Obrigatório para iOS e Android 13+)
     NotificationSettings settings = await _fcm.requestPermission(
       alert: true,
@@ -45,24 +74,29 @@ class NotificationService {
 
   void _setupMessageHandlers() {
     // Cenário: Foreground (App aberto na tela)
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
       debugPrint(
         'Mensagem recebida em Foreground: ${message.notification?.title}',
       );
 
       final notification = message.notification;
+
       if (notification != null) {
-        // Exibe um alerta ou SnackBar utilizando o contexto global
-        final context = navigatorKey.currentContext;
-        if (context != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('${notification.title}\n${notification.body}'),
-              backgroundColor: Colors.blueAccent,
-              duration: const Duration(seconds: 4),
+        await _localNotifications.show(
+          id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+          title: notification.title ?? 'Climapp',
+          body: notification.body ?? '',
+          notificationDetails: NotificationDetails(
+            android: AndroidNotificationDetails(
+              _channel.id,
+              _channel.name,
+              channelDescription: _channel.description,
+              importance: Importance.high,
+              priority: Priority.high,
+              icon: '@mipmap/ic_launcher',
             ),
-          );
-        }
+          ),
+        );
       }
     });
 

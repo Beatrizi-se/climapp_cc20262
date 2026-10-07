@@ -1,13 +1,10 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
-import 'package:climapp_cc20262/src/enums/enviroments_enum.dart';
 import 'package:climapp_cc20262/src/models/weather_forecast_model.dart';
 import 'package:climapp_cc20262/src/services/device_info_service.dart';
 import 'package:climapp_cc20262/src/services/weather_service.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 
 class ListCityController extends ChangeNotifier {
   ListCityController({
@@ -36,9 +33,8 @@ class ListCityController extends ChangeNotifier {
     errorMessage = '';
     notifyListeners();
 
-    _deviceCountry = await deviceInfoService.getDeviceCountry();
-
     try {
+      _deviceCountry = await deviceInfoService.getDeviceCountry();
       allCities = await weatherService.getWeatherForecast(listCitySearch);
       filteredCities = List.from(allCities);
     } on TimeoutException catch (e) {
@@ -50,7 +46,9 @@ class ListCityController extends ChangeNotifier {
       debugPrint(errorMessage);
       debugPrint('====================================');
     } catch (e) {
-      print(e);
+      debugPrint('Erro ao carregar cidades: $e');
+      errorMessage =
+          'Não foi possível carregar as cidades. Verifique sua conexão e a chave da API.';
     } finally {
       isLoading = false;
       notifyListeners();
