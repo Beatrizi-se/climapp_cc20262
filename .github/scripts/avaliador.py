@@ -35,21 +35,37 @@ def get_pr_details():
         sys.exit(1)
     
     files_changed = []
+    files_summary = []
     print(f"Analisando PR #{PR_NUMBER} no repo {REPO_NAME}...")
-    
+
+    relevant_extensions = (
+        '.dart', '.js', '.ts', '.tsx', '.py', '.java', '.kt', '.swift',
+        '.xml', '.yaml', '.yml', '.gradle', '.kts', '.plist'
+    )
+
     for file in pr.get_files():
-        if file.filename.endswith(('.dart', '.js', '.ts', '.tsx', '.py', '.java', '.kt', '.xml')): 
+        files_summary.append(
+            f"- {file.filename} ({file.status}: +{file.additions} / -{file.deletions})"
+        )
+        if file.filename.endswith(relevant_extensions):
             patch_content = file.patch if file.patch else "Conteúdo binário ou muito grande omitido."
-            files_changed.append(f"Arquivo: {file.filename}\nAlterações:\n{patch_content}")
-    
+            files_changed.append(
+                f"Arquivo: {file.filename} [{file.status} | +{file.additions} -{file.deletions}]\nAlterações:\n{patch_content}"
+            )
+
     diff_text = "\n---\n".join(files_changed)
-    
+    stats_text = (
+        f"Total de arquivos alterados: {pr.changed_files} "
+        f"(+{pr.additions} linhas adicionadas / -{pr.deletions} linhas removidas)\n"
+        + "\n".join(files_summary)
+    )
+
     pr_title = pr.title
     pr_body = pr.body if pr.body else "Nenhuma descrição fornecida no PR."
-    
-    return diff_text, pr_title, pr_body, pr
 
-def evaluate_code(diff_text, pr_title, pr_body):
+    return diff_text, stats_text, pr_title, pr_body, pr
+
+def evaluate_code(diff_text, stats_text, pr_title, pr_body):
     if not diff_text:
         return "Não foi possível encontrar alterações de código legíveis neste PR."
 
@@ -59,6 +75,9 @@ def evaluate_code(diff_text, pr_title, pr_body):
 ### DADOS DO PULL REQUEST
 **Título:** {pr_title}
 **Descrição:** {pr_body}
+
+### ESTATÍSTICAS DO DIFF
+{stats_text}
 
 ### DIFF DO CÓDIGO (Alterações do PR)
 {diff_text}
@@ -81,12 +100,12 @@ def post_comment(pr, body):
         print(f"Erro ao postar comentário: {e}")
 
 if __name__ == "__main__":
-    diff_text, pr_title, pr_body, pr = get_pr_details()
+    diff_text, stats_text, pr_title, pr_body, pr = get_pr_details()
     
     if not diff_text:
         print("Nenhum arquivo relevante alterado ou diff vazio.")
     else:
-        review = evaluate_code(diff_text, pr_title, pr_body)
+        review = evaluate_code(diff_text, stats_text, pr_title, pr_body)
         
         comment_header = f"## 🤖 Avaliação Automática do Gemini\n**Avaliando:** {pr_title}\n\n"
         post_comment(pr, comment_header + review)
