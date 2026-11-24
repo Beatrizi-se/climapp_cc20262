@@ -1,4 +1,5 @@
 import 'package:climapp_cc20262/src/controller/list_city_controller.dart';
+import 'package:climapp_cc20262/src/database/city_local_repository.dart';
 import 'package:climapp_cc20262/src/screens/welcome_screen.dart';
 import 'package:climapp_cc20262/src/services/device_info_service.dart';
 import 'package:climapp_cc20262/src/services/notification_service.dart';
@@ -22,9 +23,9 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-  final notificationService = NotificationService();
-  await notificationService.initialize();
+  //FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  //final notificationService = NotificationService();
+  //await notificationService.initialize();
   runApp(const MyApp());
 }
 
@@ -37,10 +38,12 @@ class MyApp extends StatelessWidget {
       providers: [
         Provider<WeatherService>(create: (_) => WeatherService()),
         Provider<DeviceInfoService>(create: (_) => DeviceInfoService()),
+        Provider<CityLocalRepository>(create: (_) => CityLocalRepository()),
         ChangeNotifierProvider(
           create: (context) => ListCityController(
             weatherService: context.read<WeatherService>(),
             deviceInfoService: context.read<DeviceInfoService>(),
+            localRepository: context.read<CityLocalRepository>(),
           )..loadCities(),
         ),
       ],
