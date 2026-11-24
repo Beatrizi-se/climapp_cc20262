@@ -23,9 +23,9 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  //FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-  //final notificationService = NotificationService();
-  //await notificationService.initialize();
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  final notificationService = NotificationService();
+  await notificationService.initialize();
   runApp(const MyApp());
 }
 
@@ -40,14 +40,16 @@ class MyApp extends StatelessWidget {
         Provider<DeviceInfoService>(create: (_) => DeviceInfoService()),
         Provider<CityLocalRepository>(create: (_) => CityLocalRepository()),
         ChangeNotifierProvider(
-          create: (context) => ListCityController(
-            weatherService: context.read<WeatherService>(),
-            deviceInfoService: context.read<DeviceInfoService>(),
-            localRepository: context.read<CityLocalRepository>(),
-          )..loadCities(),
+          create:
+              (context) => ListCityController(
+                weatherService: context.read<WeatherService>(),
+                deviceInfoService: context.read<DeviceInfoService>(),
+                localRepository: context.read<CityLocalRepository>(),
+              )..loadCities(),
         ),
       ],
       child: MaterialApp(
+        navigatorKey: NotificationService().navigatorKey,
         title: 'Climapp',
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
