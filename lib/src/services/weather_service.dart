@@ -58,4 +58,40 @@ class WeatherService {
     }
     return listCity;
   }
+
+  Future<WeatherForecastModel?> getWeatherByLocation(
+    double lat,
+    double lon,
+  ) async {
+    final enumEnv = EnviromentEnum.constants;
+    if (enumEnv.API_KEY.isEmpty) {
+      return null;
+    }
+
+    try {
+      final uri = Uri.parse(enumEnv.API_BASE_URL).replace(
+        queryParameters: {
+          'key': enumEnv.API_KEY,
+          'lat': lat.toString(),
+          'lon': lon.toString(),
+          'user_ip': 'remote',
+        },
+      );
+      final response = await http.get(uri).timeout(
+        const Duration(seconds: 5),
+      );
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map<String, dynamic>) {
+          final results = decoded['results'];
+          if (results is Map<String, dynamic>) {
+            return WeatherForecastModel.fromJson(results);
+          }
+        }
+      }
+    } catch (e) {
+      // Se falhar (ex: offline), retorna null sem quebrar a tela do mapa
+    }
+    return null;
+  }
 }

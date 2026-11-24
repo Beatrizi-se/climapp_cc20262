@@ -1,4 +1,7 @@
+import 'package:climapp_cc20262/src/enums/enviroments_enum.dart';
+import 'package:climapp_cc20262/src/models/weather_forecast_model.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:latlong2/latlong.dart';
 
 class CompassInfoPanelWidget extends StatelessWidget {
@@ -6,12 +9,14 @@ class CompassInfoPanelWidget extends StatelessWidget {
     required this.position,
     required this.heading,
     required this.accuracy,
+    this.weather,
     super.key,
   });
 
   final LatLng position;
   final double heading;
   final double? accuracy;
+  final WeatherForecastModel? weather;
 
   @override
   Widget build(BuildContext context) {
@@ -49,6 +54,67 @@ class CompassInfoPanelWidget extends StatelessWidget {
               Expanded(child: _CoordinatesCard(position: position)),
             ],
           ),
+          if (weather != null) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: const Color(0x1FFFFFFF),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Row(
+                children: [
+                  if (weather!.conditionSlug.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 10),
+                      child: SvgPicture.network(
+                        '${EnviromentEnum.constants.IMAGE_URL}${weather!.conditionSlug}.svg',
+                        width: 32,
+                        height: 32,
+                        placeholderBuilder:
+                            (_) => const Icon(
+                              Icons.wb_sunny_outlined,
+                              color: Colors.white,
+                              size: 28,
+                            ),
+                      ),
+                    ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          weather!.cityName.isNotEmpty
+                              ? weather!.cityName
+                              : 'Localização Atual',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          weather!.description,
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Text(
+                    '${weather!.temp}°C',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
