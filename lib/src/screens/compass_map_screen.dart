@@ -2,10 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_compass/flutter_compass.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:provider/provider.dart';
 
+import '../controller/list_city_controller.dart';
+import '../models/weather_forecast_model.dart';
 import '../services/location_service.dart';
+import '../services/weather_service.dart';
+import '../widgets/city_map_marker_widget.dart';
 import '../widgets/compass_info_panel_widget.dart';
 import '../widgets/compass_status_widgets.dart';
+import '../widgets/compass_user_marker_widget.dart';
 import '../widgets/floating_compass_widget.dart';
 
 class CompassMapScreen extends StatefulWidget {
@@ -17,9 +23,11 @@ class CompassMapScreen extends StatefulWidget {
 
 class _CompassMapScreenState extends State<CompassMapScreen> {
   final LocationService _locationService = LocationService();
+  final WeatherService _weatherService = WeatherService();
   final MapController _mapController = MapController();
 
   LatLng? _currentPosition;
+  WeatherForecastModel? _currentWeather;
   bool _isLoading = true;
   String? _errorMessage;
 
@@ -37,10 +45,15 @@ class _CompassMapScreenState extends State<CompassMapScreen> {
 
     try {
       final position = await _locationService.determinePosition();
+      final weather = await _weatherService.getWeatherByLocation(
+        position.latitude,
+        position.longitude,
+      );
       if (!mounted) return;
 
       setState(() {
         _currentPosition = position;
+        _currentWeather = weather;
         _isLoading = false;
       });
     } catch (e) {
@@ -112,6 +125,7 @@ class _CompassMapScreenState extends State<CompassMapScreen> {
             : _CompassMapView(
                 mapController: _mapController,
                 currentPosition: position!,
+                weather: _currentWeather,
               ),
       ),
     );
@@ -122,13 +136,71 @@ class _CompassMapView extends StatelessWidget {
   const _CompassMapView({
     required this.mapController,
     required this.currentPosition,
+    this.weather,
   });
 
   final MapController mapController;
   final LatLng currentPosition;
+  final WeatherForecastModel? weather;
+
+  static const Map<String, LatLng> _knownCoordinates = {
+    'aracaju': LatLng(-10.9472, -37.0731),
+    'itabaiana': LatLng(-10.6850, -37.4253),
+    'salvador': LatLng(-12.9777, -38.5016),
+    'curitiba': LatLng(-25.4284, -49.2733),
+    'são paulo': LatLng(-23.5505, -46.6333),
+    'sao paulo': LatLng(-23.5505, -46.6333),
+    'rio de janeiro': LatLng(-22.9068, -43.1729),
+    'brasília': LatLng(-15.7975, -47.8919),
+    'brasilia': LatLng(-15.7975, -47.8919),
+    'belo horizonte': LatLng(-19.9167, -43.9345),
+    'fortaleza': LatLng(-3.7319, -38.5267),
+    'recife': LatLng(-8.0476, -34.8770),
+    'porto alegre': LatLng(-30.0346, -51.2177),
+    'florianópolis': LatLng(-27.5954, -48.5480),
+    'florianopolis': LatLng(-27.5954, -48.5480),
+    'manaus': LatLng(-3.1190, -60.0217),
+    'belém': LatLng(-1.4558, -48.4902),
+    'belem': LatLng(-1.4558, -48.4902),
+    'goiânia': LatLng(-16.6869, -49.2648),
+    'goiania': LatLng(-16.6869, -49.2648),
+  };
+
+  LatLng? _resolveCoordinates(String name) {
+    final clean = name.toLowerCase().split(',').first.trim();
+    return _knownCoordinates[clean];
+  }
 
   @override
   Widget build(BuildContext context) {
+    final cityController = context.watch<ListCityController>();
+    final cityMarkers = <Marker>[];
+
+    final distanceCalculator = const Distance();
+    for (final city in cityController.allCities) {
+      final coords = _resolveCoordinates(
+        city.cityName.isNotEmpty ? city.cityName : city.city,
+      );
+      if (coords != null) {
+        final double distanceInKm = distanceCalculator.as(
+          LengthUnit.Kilometer,
+          currentPosition,
+          coords,
+        );
+        // Não sobrepõe o balão da cidade caso o usuário já esteja nela
+        if (distanceInKm > 15.0) {
+          cityMarkers.add(
+            Marker(
+              point: coords,
+              width: 120,
+              height: 48,
+              child: CityMapMarkerWidget(city: city),
+            ),
+          );
+        }
+      }
+    }
+
     return StreamBuilder<CompassEvent>(
       stream: FlutterCompass.events,
       builder: (context, snapshot) {
@@ -150,15 +222,12 @@ class _CompassMapView extends StatelessWidget {
                 ),
                 MarkerLayer(
                   markers: [
+                    ...cityMarkers,
                     Marker(
                       point: currentPosition,
                       width: 60,
                       height: 60,
-                      child: const Icon(
-                        Icons.navigation,
-                        color: Colors.blueAccent,
-                        size: 44,
-                      ),
+                      child: CompassUserMarkerWidget(heading: heading),
                     ),
                   ],
                 ),
@@ -177,6 +246,7 @@ class _CompassMapView extends StatelessWidget {
                 position: currentPosition,
                 heading: heading,
                 accuracy: accuracy,
+                weather: weather,
               ),
             ),
           ],
