@@ -109,7 +109,8 @@ class _ListCityScreenState extends State<ListCityScreen> {
                     if (controller.isLoading) {
                       return const Center(child: CircularProgressIndicator());
                     }
-                    if (controller.errorMessage.isNotEmpty) {
+                    if (controller.filteredCities.isEmpty &&
+                        controller.errorMessage.isNotEmpty) {
                       return Center(
                         child: Padding(
                           padding: const EdgeInsets.all(16),
@@ -129,26 +130,73 @@ class _ListCityScreenState extends State<ListCityScreen> {
                         ),
                       );
                     }
-                    return ListView.builder(
-                      itemCount: controller.filteredCities.length,
-                      itemBuilder: (context, index) {
-                        final city = controller.filteredCities[index];
-                        return CityTileWidget(
-                          cityName: city.cityName,
-                          icon: city.conditionSlug,
-                          temperature: city.temp,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => WeatherCityScreen(
-                                  weatherForecastModel: city,
+                    return Column(
+                      children: [
+                        if (controller.isOfflineMode)
+                          Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.amber.shade800.withValues(
+                                alpha: 0.25,
+                              ),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: Colors.amber.shade700.withValues(
+                                  alpha: 0.6,
                                 ),
                               ),
-                            );
-                          },
-                        );
-                      },
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.cloud_off,
+                                  color: Colors.amber.shade200,
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    controller.errorMessage.isNotEmpty
+                                        ? controller.errorMessage
+                                        : 'Modo offline: exibindo dados salvos em cache.',
+                                    style: TextStyle(
+                                      color: Colors.amber.shade100,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        Expanded(
+                          child: ListView.builder(
+                            itemCount: controller.filteredCities.length,
+                            itemBuilder: (context, index) {
+                              final city = controller.filteredCities[index];
+                              return CityTileWidget(
+                                cityName: city.cityName,
+                                icon: city.conditionSlug,
+                                temperature: city.temp,
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (context) => WeatherCityScreen(
+                                            weatherForecastModel: city,
+                                          ),
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                      ],
                     );
                   },
                 ),

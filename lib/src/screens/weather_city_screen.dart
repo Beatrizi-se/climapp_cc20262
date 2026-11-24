@@ -56,6 +56,14 @@ class _WeatherCityScreenState extends State<WeatherCityScreen> {
                     ),
                     SvgPicture.network(
                       '${envEnum.IMAGE_URL}${widget.weatherForecastModel.conditionSlug}.svg',
+                      placeholderBuilder: (_) => const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 8),
+                        child: Icon(
+                          Icons.cloud_outlined,
+                          color: Colors.white,
+                          size: 54,
+                        ),
+                      ),
                     ),
                     Text(
                       '${widget.weatherForecastModel.temp}°',
@@ -82,7 +90,9 @@ class _WeatherCityScreenState extends State<WeatherCityScreen> {
                         ),
                         Expanded(
                           child: Text(
-                            "${widget.weatherForecastModel.forecast[0].min}°/${widget.weatherForecastModel.forecast[0].max}°",
+                            widget.weatherForecastModel.forecast.isNotEmpty
+                                ? "${widget.weatherForecastModel.forecast[0].min}°/${widget.weatherForecastModel.forecast[0].max}°"
+                                : "--°/--°",
                             textAlign: TextAlign.right,
                             style: TextStyle(fontSize: 21),
                           ),
@@ -123,6 +133,12 @@ class _WeatherCityScreenState extends State<WeatherCityScreen> {
                             padding: const EdgeInsets.symmetric(vertical: 8),
                             child: Image.network(
                               "${envEnum.MOON_PHASE_URL}${widget.weatherForecastModel.forecast[index].moonPhase}.png",
+                              errorBuilder:
+                                  (context, error, stackTrace) => const Icon(
+                                    Icons.nightlight_round,
+                                    color: Colors.amberAccent,
+                                    size: 36,
+                                  ),
                             ),
                           ),
                           Text(

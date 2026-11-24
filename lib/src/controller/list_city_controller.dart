@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:climapp_cc20262/src/models/city_local_entity.dart';
+import 'package:climapp_cc20262/src/models/forecast_model.dart';
 import 'package:climapp_cc20262/src/models/weather_forecast_model.dart';
 import 'package:climapp_cc20262/src/services/device_info_service.dart';
 import 'package:climapp_cc20262/src/services/weather_service.dart';
@@ -56,6 +58,10 @@ class ListCityController extends ChangeNotifier {
                   : '',
               temp: item.temp.toDouble(),
               description: item.description,
+              conditionSlug: item.conditionSlug,
+              forecastJson: jsonEncode(
+                item.forecast.map((f) => f.toMap()).toList(),
+              ),
               updatedAt: DateTime.now().toIso8601String(),
             ),
           )
@@ -94,33 +100,43 @@ class ListCityController extends ChangeNotifier {
 
     if (cachedData.isNotEmpty) {
       // Converte as entidades persistidas do banco para a lista consumida pela UI
-      allCities = cachedData
-          .map(
-            (cached) => WeatherForecastModel(
-              cityName: cached.name,
-              city: '${cached.name}, ${cached.state}',
-              temp: cached.temp?.toInt() ?? 0,
-              description: cached.description ?? 'Sem dados',
-              date: '',
-              time: '',
-              conditionCode: '',
-              currently: '',
-              imgId: '',
-              humidity: 0,
-              cloudiness: 0.0,
-              rain: 0.0,
-              windSpeedy: '',
-              windDirection: 0,
-              windCardinal: '',
-              sunrise: '',
-              sunset: '',
-              moonPhase: '',
-              conditionSlug: '',
-              timezone: '',
-              forecast: [],
-            ),
-          )
-          .toList();
+      allCities = cachedData.map((cached) {
+        List<ForecastModel> forecasts = [];
+        if (cached.forecastJson != null && cached.forecastJson!.isNotEmpty) {
+          try {
+            final decoded = jsonDecode(cached.forecastJson!) as List;
+            forecasts = decoded
+                .map((f) => ForecastModel.fromJson(f as Map<String, dynamic>))
+                .toList();
+          } catch (e) {
+            debugPrint('Erro ao recuperar previsão semanal do cache: $e');
+          }
+        }
+
+        return WeatherForecastModel(
+          cityName: cached.name,
+          city: '${cached.name}, ${cached.state}',
+          temp: cached.temp?.toInt() ?? 0,
+          description: cached.description ?? 'Sem dados',
+          date: '',
+          time: '',
+          conditionCode: '',
+          currently: '',
+          imgId: '',
+          humidity: 0,
+          cloudiness: 0.0,
+          rain: 0.0,
+          windSpeedy: '',
+          windDirection: 0,
+          windCardinal: '',
+          sunrise: '',
+          sunset: '',
+          moonPhase: '',
+          conditionSlug: cached.conditionSlug ?? 'cloud',
+          timezone: '',
+          forecast: forecasts,
+        );
+      }).toList();
 
       filteredCities = List.from(allCities);
       isOfflineMode = true;

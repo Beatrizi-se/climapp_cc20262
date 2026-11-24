@@ -4,6 +4,8 @@ class CityLocalEntity {
   final String state;
   final double? temp;
   final String? description;
+  final String? conditionSlug;
+  final String? forecastJson;
   final String updatedAt;
 
   CityLocalEntity({
@@ -12,6 +14,8 @@ class CityLocalEntity {
     required this.state,
     this.temp,
     this.description,
+    this.conditionSlug,
+    this.forecastJson,
     required this.updatedAt,
   });
 
@@ -22,6 +26,8 @@ class CityLocalEntity {
       'state': state,
       'temp': temp,
       'description': description,
+      'condition_slug': conditionSlug,
+      'forecast_json': forecastJson,
       'updated_at': updatedAt,
     };
   }
@@ -33,6 +39,8 @@ class CityLocalEntity {
       state: map['state'] as String,
       temp: (map['temp'] as num?)?.toDouble(),
       description: map['description'] as String?,
+      conditionSlug: map['condition_slug'] as String?,
+      forecastJson: map['forecast_json'] as String?,
       updatedAt: map['updated_at'] as String,
     );
   }

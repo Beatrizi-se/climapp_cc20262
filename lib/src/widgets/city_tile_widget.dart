@@ -26,7 +26,16 @@ class CityTileWidget extends StatelessWidget {
       margin: .symmetric(vertical: 10),
       child: ListTile(
         onTap: onTap,
-        leading: SvgPicture.network('${envEnum.IMAGE_URL}$icon.svg'),
+        leading: SvgPicture.network(
+          '${envEnum.IMAGE_URL}$icon.svg',
+          width: 36,
+          height: 36,
+          placeholderBuilder: (context) => const Icon(
+            Icons.cloud_outlined,
+            color: Colors.white70,
+            size: 32,
+          ),
+        ),
         titleTextStyle: TextStyle(fontSize: 20),
         textColor: Colors.white,
         title: Text(cityName, textAlign: .center),
